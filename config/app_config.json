@@ -1,0 +1,153 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "Централизованная конфигурация для ML Manipulation Bybit",
+    "last_updated": "2025-01-27",
+    "environments": ["development", "docker", "production"]
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "bybit_manipulation",
+    "user": "bybit",
+    "password": "bybit",
+    "url_template": "postgresql://{user}:{password}@{host}:{port}/{name}"
+  },
+  "rabbitmq": {
+    "host": "localhost",
+    "port": 5672,
+    "user": "guest",
+    "password": "guest",
+    "management_port": 15672,
+    "url_template": "amqp://{user}:{password}@{host}:{port}/"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "url_template": "redis://{host}:{port}"
+  },
+  "api": {
+    "host": "localhost",
+    "port": 5000,
+    "protocol": "http",
+    "url_template": "{protocol}://{host}:{port}"
+  },
+  "websocket": {
+    "host": "localhost",
+    "port": 5000,
+    "protocol": "ws",
+    "secure_protocol": "wss",
+    "url_template": "{protocol}://{host}:{port}",
+    "reconnect_interval": 5,
+    "max_reconnect_attempts": 10
+  },
+  "frontend": {
+    "host": "localhost",
+    "port": 3001,
+    "protocol": "http",
+    "url_template": "{protocol}://{host}:{port}"
+  },
+  "monitoring": {
+    "prometheus": {
+      "host": "localhost",
+      "port": 9090,
+      "protocol": "http",
+      "url_template": "{protocol}://{host}:{port}"
+    },
+    "grafana": {
+      "host": "localhost",
+      "port": 3000,
+      "protocol": "http",
+      "url_template": "{protocol}://{host}:{port}"
+    }
+  },
+  "application": {
+    "host": "localhost",
+    "port": 8000,
+    "protocol": "http",
+    "url_template": "{protocol}://{host}:{port}"
+  },
+  "bybit_api": {
+    "key": "your_api_key_here",
+    "secret": "your_api_secret_here",
+    "testnet": false,
+    "ws_uri": "wss://stream.bybit.com/v5/public/linear"
+  },
+  "ml": {
+    "model_path": "./models/",
+    "training_interval": 3600,
+    "prediction_threshold": 0.7,
+    "training_buffer_size": 10000,
+    "min_data_points": 100,
+    "target_prediction_window_sec": 300,
+    "data_collection_window_sec": 60
+  },
+  "anomaly_detection": {
+    "model_path": "anomaly_model.joblib",
+    "training_buffer_size": 5000,
+    "min_samples_for_training": 100,
+    "contamination": 0.01,
+    "retrain_interval_minutes": 60
+  },
+  "alerts": {
+    "threshold": 0.8,
+    "max_per_minute": 10,
+    "grouping_seconds": 60,
+    "cooldown_seconds": 30
+  },
+  "trading": {
+    "kline_interval_minutes": 1,
+    "trade_history_maxlen": 10000,
+    "wash_trade_threshold_ratio": 0.8,
+    "ping_pong_threshold_seconds": 0.1,
+    "ramping_volume_multiplier": 5,
+    "ramping_price_change_percent": 0.5,
+    "consecutive_long_threshold": 5,
+    "consecutive_long_volume_multiplier": 2
+  },
+  "logging": {
+    "level": "INFO"
+  },
+  "environment_overrides": {
+    "docker": {
+      "database": {
+        "host": "timescaledb",
+        "name": "postgres"
+      },
+      "rabbitmq": {
+        "host": "rabbitmq"
+      },
+      "redis": {
+        "host": "redis"
+      },
+      "bybit_api": {
+        "testnet": true
+      }
+    },
+    "production": {
+      "api": {
+        "protocol": "https"
+      },
+      "websocket": {
+        "protocol": "wss"
+      },
+      "frontend": {
+        "protocol": "https"
+      },
+      "monitoring": {
+        "prometheus": {
+          "protocol": "https"
+        },
+        "grafana": {
+          "protocol": "https"
+        }
+      },
+      "application": {
+        "protocol": "https"
+      },
+      "logging": {
+        "level": "WARNING"
+      }
+    }
+  }
+}
