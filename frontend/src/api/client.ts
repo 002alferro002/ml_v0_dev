@@ -1,37 +1,12 @@
 import { MLStatus, TrainingMetrics, Prediction, PredictionHistory, Alert, SystemStatus, StreamingData, DatabaseStats, MetricsData } from '@/types/ml';
-import { configService } from '@/services/configService';
 import { CONFIG } from '@/constants/config';
 
 class ApiClient {
-  private apiBaseUrl: string = `${CONFIG.API_BASE_URL}/api`; // Значение по умолчанию
-  private configLoaded: boolean = false;
+  private apiBaseUrl: string = CONFIG.API_BASE_URL;
 
-  constructor() {
-    this.loadConfig();
-  }
-
-  private async loadConfig(): Promise<void> {
-    try {
-      console.log('Loading API configuration...');
-      const apiUrl = await configService.getApiUrl('/api');
-      console.log('API URL loaded:', apiUrl);
-      this.apiBaseUrl = apiUrl;
-      this.configLoaded = true;
-    } catch (error) {
-      console.error('Failed to load API configuration, using default:', error);
-      console.log('Using default API URL:', this.apiBaseUrl);
-      this.configLoaded = true; // Продолжаем работу с дефолтными значениями
-    }
-  }
-
-  private async ensureConfigLoaded(): Promise<void> {
-    if (!this.configLoaded) {
-      await this.loadConfig();
-    }
-  }
+  constructor() {}
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    await this.ensureConfigLoaded();
     const url = `${this.apiBaseUrl}${endpoint}`;
     
     console.log(`Making API request to: ${url}`);
@@ -65,43 +40,47 @@ class ApiClient {
     return this.request<MLStatus>('/ml/status');
   }
 
-  async startTraining(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/ml/start_training', {
+  async startTraining(symbol?: string, timeframe?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/ml/training/force', {
       method: 'POST',
+      body: JSON.stringify({ symbol, timeframe }),
     });
   }
 
   async stopTraining(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/ml/stop_training', {
+    return this.request<{ message: string }>('/ml/mode/switch', {
       method: 'POST',
+      body: JSON.stringify({ mode: 'prediction' }),
     });
   }
 
-  async startPrediction(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/ml/start_prediction', {
+  async startPrediction(symbol?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/ml/mode/switch', {
       method: 'POST',
+      body: JSON.stringify({ mode: 'prediction' }),
     });
   }
 
   async stopPrediction(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/ml/stop_prediction', {
+    return this.request<{ message: string }>('/ml/mode/switch', {
       method: 'POST',
+      body: JSON.stringify({ mode: 'training' }),
     });
   }
 
   // Training Metrics
   async getTrainingMetrics(): Promise<TrainingMetrics> {
-    return this.request<TrainingMetrics>('/ml/training_metrics');
+    return this.request<TrainingMetrics>('/ml/training/metrics');
   }
 
   // Predictions
   async getCurrentPredictions(): Promise<Prediction[]> {
-    return this.request<Prediction[]>('/predictions/current');
+    return this.request<Prediction[]>('/ml/predictions/active');
   }
 
   async getPredictionHistory(limit?: number): Promise<PredictionHistory[]> {
     const params = limit ? `?limit=${limit}` : '';
-    return this.request<PredictionHistory[]>(`/predictions/history${params}`);
+    return this.request<PredictionHistory[]>(`/ml/predictions/history${params}`);
   }
 
   // Alerts
@@ -136,21 +115,6 @@ class ApiClient {
     return this.request<MetricsData>('/metrics');
   }
 
-  // WebSocket connection for real-time updates
-  async createWebSocket(endpoint: string): Promise<WebSocket> {
-    const wsUrl = await configService.getWebSocketUrl(endpoint);
-    return new WebSocket(wsUrl);
-  }
-
-  // Методы для работы с конфигурацией
-  async reloadConfig(): Promise<void> {
-    this.configLoaded = false;
-    await this.loadConfig();
-  }
-
-  getApiBaseUrl(): string {
-    return this.apiBaseUrl;
-  }
 }
 
 export const apiClient = new ApiClient();
